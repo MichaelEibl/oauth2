@@ -99,6 +99,27 @@ func JWTConfigFromJSON(jsonKey []byte, scope ...string) (*jwt.Config, error) {
 	}, nil
 }
 
+// JWTConfigFromJSONWithImpersonate uses a Google Developers service account JSON key file to read
+// the credentials that authorize and authenticate the requests with the ability to impersonate a user.
+// Create a service account on "Credentials" page under "APIs & Auth" for your
+// project at https://console.developers.google.com to download a JSON key file.
+func JWTConfigFromJSONWithImpersonate(jsonKey []byte, usersEmail string, scope ...string) (*jwt.Config, error) {
+	var key struct {
+		Email      string `json:"client_email"`
+		PrivateKey string `json:"private_key"`
+	}
+	if err := json.Unmarshal(jsonKey, &key); err != nil {
+		return nil, err
+	}
+	return &jwt.Config{
+		Email:      key.Email,
+		PrivateKey: []byte(key.PrivateKey),
+		Subject:    usersEmail,
+		Scopes:     scope,
+		TokenURL:   JWTTokenURL,
+	}, nil
+}
+
 // ComputeTokenSource returns a token source that fetches access tokens
 // from Google Compute Engine (GCE)'s metadata server. It's only valid to use
 // this token source if your program is running on a GCE instance.
